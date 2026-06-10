@@ -1,0 +1,6 @@
+{
+  "name": "BodyBuildHealth",
+  "description": "A comprehensive bodybuilding routine builder, calorie tracker, and fitness health optimizer with AI Coaching powered by Gemini.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
