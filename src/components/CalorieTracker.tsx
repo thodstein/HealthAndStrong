@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Sparkles, Plus, Trash2, Salad, Info, Utensils, Award } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import { Sparkles, Plus, Trash2, Salad, Info, Utensils, Award, RefreshCw } from "lucide-react";
 import { MealLog } from "../types";
 
 export default function CalorieTracker() {
@@ -8,6 +9,8 @@ export default function CalorieTracker() {
     const saved = localStorage.getItem("bbh_meals");
     return saved ? JSON.parse(saved) : [];
   });
+
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   // Target goals
   const [calorieTarget] = useState(2500);
@@ -128,13 +131,17 @@ export default function CalorieTracker() {
 
   // Clear all for the day
   const handleClearAllMeals = () => {
-    if (confirm("Reset current meal log profile for the day?")) {
-      setMeals([]);
-    }
+    setShowClearConfirm(true);
+  };
+
+  const confirmClearAllMeals = () => {
+    setMeals([]);
+    setShowClearConfirm(false);
   };
 
   return (
-    <div id="calorie_tracker_root" className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+    <>
+      <div id="calorie_tracker_root" className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
       
       {/* LEFT COLUMN: Nutrition Status Rings and Counters */}
       <div className="lg:col-span-12 flex flex-col gap-6">
@@ -504,5 +511,46 @@ export default function CalorieTracker() {
         </div>
       </div>
     </div>
+
+    <AnimatePresence>
+      {showClearConfirm && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 text-center"
+        >
+          <motion.div
+            initial={{ scale: 0.9, y: 15 }}
+            animate={{ scale: 1, y: 0 }}
+            exit={{ scale: 0.9, y: 15 }}
+            className="bg-slate-900 border border-slate-800 p-6 rounded-3xl max-w-sm shadow-2xl flex flex-col items-center"
+          >
+            <div className="w-12 h-12 bg-red-950/40 text-red-400 rounded-full flex items-center justify-center mb-4 border border-red-900/50">
+              <Trash2 className="w-5 h-5" />
+            </div>
+            <h4 className="text-sm font-bold text-white uppercase tracking-wider font-mono">Clear Intake Logs?</h4>
+            <p className="text-xs text-slate-400 mt-2 leading-relaxed">
+              Are you sure you want to completely clear your daily bodybuilding meal log? This cannot be undone.
+            </p>
+            <div className="flex gap-2.5 mt-5 w-full">
+              <button
+                onClick={confirmClearAllMeals}
+                className="flex-1 py-2 bg-red-500 hover:bg-red-400 text-white font-bold text-xs rounded-xl transition-colors cursor-pointer"
+              >
+                Yes, Clear All
+              </button>
+              <button
+                onClick={() => setShowClearConfirm(false)}
+                className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+    </>
   );
 }

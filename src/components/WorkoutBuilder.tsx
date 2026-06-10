@@ -48,6 +48,10 @@ export default function WorkoutBuilder({ onAddProgressRecord, selectedMuscleFilt
     return saved ? JSON.parse(saved) : null;
   });
 
+  // Native dialog replacement states
+  const [modalAlert, setModalAlert] = useState<{ title: string; message: string } | null>(null);
+  const [modalConfirm, setModalConfirm] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null);
+
   // Persist workouts
   useEffect(() => {
     localStorage.setItem("bbh_programs", JSON.stringify(programs));
@@ -117,7 +121,10 @@ export default function WorkoutBuilder({ onAddProgressRecord, selectedMuscleFilt
   // Delete program
   const handleDeleteProgram = (idx: number) => {
     if (programs.length <= 1) {
-      alert("You must keep at least one workout program.");
+      setModalAlert({
+        title: "Deletion Restricted",
+        message: "You must retain at least one workout routine profile in your system logs."
+      });
       return;
     }
     const filtered = programs.filter((_, i) => i !== idx);
@@ -180,7 +187,10 @@ export default function WorkoutBuilder({ onAddProgressRecord, selectedMuscleFilt
   // Start Workout Active Logic
   const handleStartWorkout = (day: WorkoutDay) => {
     if (day.isRestDay || day.exercises.length === 0) {
-      alert("No exercises available to start a workout on this day.");
+      setModalAlert({
+        title: "No Available Workout Tasks",
+        message: "There are no customizable exercises defined for this schedule today. Define movements or select an training split first."
+      });
       return;
     }
 
@@ -246,9 +256,10 @@ export default function WorkoutBuilder({ onAddProgressRecord, selectedMuscleFilt
 
     const completedExCount = activeSession.exercises.filter(ex => ex.sets.some(s => s.completed)).length;
 
-    alert(`🏆 Congratulations! You completed '${activeSession.dayName}'. 
-💪 Exercises Logged: ${completedExCount}/${activeSession.exercises.length}
-🔥 Approximate Est. Volume Lifted: ${totalVolume} lbs.`);
+    setModalAlert({
+      title: "🏆 Session Completed Successfully!",
+      message: `Splendid output! You completed '${activeSession.dayName}'.\n\n💪 Exercises Logged: ${completedExCount}/${activeSession.exercises.length}\n🔥 Est. Total Volume Transferred: ${totalVolume} lbs.\n\nKeep pushing progressive overload, champion!`
+    });
     
     // Reset active session
     setActiveSession(null);
@@ -716,9 +727,14 @@ export default function WorkoutBuilder({ onAddProgressRecord, selectedMuscleFilt
                 </div>
                 <button
                   onClick={() => {
-                    if (confirm("Are you sure you want to stop this training session? Progress will be lost.")) {
-                      setActiveSession(null);
-                    }
+                    setModalConfirm({
+                      title: "Cancel Workout Session?",
+                      message: "Are you sure you want to terminate this training session? All active logs and completed sets for this session will be lost.",
+                      onConfirm: () => {
+                        setActiveSession(null);
+                        setModalConfirm(null);
+                      }
+                    });
                   }}
                   className="p-1.5 bg-slate-900 hover:bg-slate-800 rounded-xl text-slate-400 hover:text-red-400 transition-colors"
                 >
@@ -800,16 +816,94 @@ export default function WorkoutBuilder({ onAddProgressRecord, selectedMuscleFilt
                 </button>
                 <button
                   onClick={() => {
-                    if (confirm("Minimize active session? Your sets will remain saved in current window.")) {
-                      setActiveSession(null);
-                    }
+                    setModalConfirm({
+                      title: "Minimize Session View?",
+                      message: "This panel will minimize, keeping your live workout status and filled sets intact in local memory.",
+                      onConfirm: () => {
+                        setActiveSession(null);
+                        setModalConfirm(null);
+                      }
+                    });
                   }}
-                  className="py-3 px-4 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-bold text-sm rounded-xl transition-colors"
+                  className="py-3 px-4 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-bold text-sm rounded-xl transition-colors cursor-pointer"
                 >
                   Minimize
                 </button>
               </div>
 
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* CUSTOM OVERLAY DIALOGS (REPLACING NATIVE WINDOW ALERTS & CONFIRMS) */}
+      <AnimatePresence>
+        {modalAlert && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-[9999] text-center"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 15 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 15 }}
+              className="bg-slate-900 border border-slate-800 p-6 rounded-3xl max-w-sm shadow-2xl flex flex-col items-center"
+            >
+              <div className="w-12 h-12 bg-lime-950/40 text-lime-404 rounded-full flex items-center justify-center mb-4 border border-lime-900/50">
+                <Trophy className="w-5 h-5 text-lime-400 animate-bounce" />
+              </div>
+              <h4 className="text-sm font-bold text-white uppercase tracking-wider font-mono">{modalAlert.title}</h4>
+              <p className="text-xs text-slate-400 mt-2 leading-relaxed whitespace-pre-line">
+                {modalAlert.message}
+              </p>
+              <button
+                onClick={() => setModalAlert(null)}
+                className="mt-5 w-full py-2.5 bg-lime-400 hover:bg-lime-300 text-black font-extrabold text-xs rounded-xl transition-colors cursor-pointer"
+              >
+                Understood, Champ
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {modalConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-[9999] text-center"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 15 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 15 }}
+              className="bg-slate-900 border border-slate-800 p-6 rounded-3xl max-w-sm shadow-2xl flex flex-col items-center"
+            >
+              <div className="w-12 h-12 bg-red-950/40 text-red-500 rounded-full flex items-center justify-center mb-4 border border-red-900/50">
+                <X className="w-5 h-5" />
+              </div>
+              <h4 className="text-sm font-bold text-white uppercase tracking-wider font-mono">{modalConfirm.title}</h4>
+              <p className="text-xs text-slate-400 mt-2 leading-relaxed">
+                {modalConfirm.message}
+              </p>
+              <div className="flex gap-2.5 mt-5 w-full">
+                <button
+                  onClick={() => modalConfirm.onConfirm()}
+                  className="flex-1 py-2 bg-red-500 hover:bg-red-400 text-white font-bold text-xs rounded-xl transition-colors cursor-pointer"
+                >
+                  Confirm
+                </button>
+                <button
+                  onClick={() => setModalConfirm(null)}
+                  className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
             </motion.div>
           </motion.div>
         )}

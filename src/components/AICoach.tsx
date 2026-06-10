@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Sparkles, MessageSquare, Shield, RefreshCw } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import { Send, Sparkles, MessageSquare, Shield, RefreshCw, X } from "lucide-react";
 import { ChatMessage } from "../types";
 
 export default function AICoach() {
@@ -18,6 +19,7 @@ export default function AICoach() {
   const [inputMsg, setInputMsg] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errorStatus, setErrorStatus] = useState<string | null>(null);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
   
   const endOfMessagesRef = useRef<HTMLDivElement>(null);
 
@@ -75,15 +77,18 @@ export default function AICoach() {
   };
 
   const handleResetChat = () => {
-    if (confirm("Reset current dialogue and log sheets with Coach Iron?")) {
-      setMessages([
-        {
-          role: "assistant",
-          content: "Dialogue reset! Ready for your instruction, champ. What bodybuilding or training objective are we conquering next?",
-        },
-      ]);
-      setErrorStatus(null);
-    }
+    setShowResetConfirm(true);
+  };
+
+  const confirmResetAction = () => {
+    setMessages([
+      {
+        role: "assistant",
+        content: "Dialogue reset! Ready for your instruction, champ. What bodybuilding or training objective are we conquering next?",
+      },
+    ]);
+    setErrorStatus(null);
+    setShowResetConfirm(false);
   };
 
   return (
@@ -230,6 +235,46 @@ export default function AICoach() {
           <Send className="w-4 h-4" />
         </button>
       </form>
+
+      <AnimatePresence>
+        {showResetConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4 z-50 text-center"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 15 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 15 }}
+              className="bg-slate-900 border border-slate-800 p-6 rounded-3xl max-w-sm shadow-2xl flex flex-col items-center"
+            >
+              <div className="w-12 h-12 bg-red-950/40 text-red-400 rounded-full flex items-center justify-center mb-4 border border-red-900/50">
+                <RefreshCw className="w-5 h-5 animate-spin" />
+              </div>
+              <h4 className="text-sm font-bold text-white uppercase tracking-wider font-mono">Reset Dialogue Stream?</h4>
+              <p className="text-xs text-slate-400 mt-2 leading-relaxed">
+                Are you sure you want to declare a total reset with Coach Iron? This will wipe your active chat history.
+              </p>
+              <div className="flex gap-2.5 mt-5 w-full">
+                <button
+                  onClick={confirmResetAction}
+                  className="flex-1 py-2 bg-red-500 hover:bg-red-400 text-white font-bold text-xs rounded-xl transition-colors cursor-pointer"
+                >
+                  Yes, Reset Chat
+                </button>
+                <button
+                  onClick={() => setShowResetConfirm(false)}
+                  className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
     </div>
   );
